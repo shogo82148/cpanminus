@@ -965,7 +965,9 @@ sub run_exec {
 sub run_timeout {
     my($self, $cmd, $timeout) = @_;
 
-    return $self->run_command($cmd) if ref($cmd) eq 'CODE' || WIN32 || $self->{verbose} || !$timeout;
+    # very old perl doesn't support dup(2) mode ('>&')
+    # fallback to system()
+    return $self->run_command($cmd) if ref($cmd) eq 'CODE' || WIN32 || $self->{verbose} || !$timeout || $] < 5.008;
 
     my $pid = fork;
     if ($pid) {
