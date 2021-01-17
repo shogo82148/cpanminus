@@ -912,7 +912,7 @@ sub run_command {
         # very old perl doesn't support dup(2) mode ('>&')
         # fallback to system()
         $cmd = Menlo::Util::shell_quote(@$cmd) if ref $cmd eq 'ARRAY';
-        my $log = $self->{verbose} ? " >> " . Menlo::Util::shell_quote($self->{log}) . " 2>&1" : '';
+        my $log = $self->{verbose} ? '' : " >> " . Menlo::Util::shell_quote($self->{log}) . " 2>&1";
         if (!WIN32 || $] >= 5.008) {
             return !system "$cmd$log";
         }
