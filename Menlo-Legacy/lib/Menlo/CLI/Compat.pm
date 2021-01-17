@@ -910,11 +910,9 @@ sub run_command {
 
     if (WIN32) {
         $cmd = Menlo::Util::shell_quote(@$cmd) if ref $cmd eq 'ARRAY';
-        unless ($self->{verbose}) {
-            $cmd .= " >> " . Menlo::Util::shell_quote($self->{log}) . " 2>&1";
-        }
+        my $log = $self->{verbose} ? " >> " . Menlo::Util::shell_quote($self->{log}) . " 2>&1" : '';
         if ($] >= 5.008) {
-            return !system $cmd;
+            return !system "$cmd$log";
         }
 
         # system of perl < 5.008 doesn't handle the arguments of cmd.exe correctly.
@@ -928,9 +926,9 @@ sub run_command {
         # based on create_command_line of win32.c
         # https://github.com/Perl/perl5/blob/c5f9609a1a8a7a902c023d06c8b2a4c42afce078/win32/win32.c#L3795-L3948
         if ($cmd =~ /^".*"$/ && $cmd =~ /\s/) {
-            push @cmd, "\"$cmd\"";
+            push @cmd, "\"$cmd\"$log";
         } else {
-            push @cmd;
+            push @cmd, "$cmd$log";
         }
 
         !system @cmd;
