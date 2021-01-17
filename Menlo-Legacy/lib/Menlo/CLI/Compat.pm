@@ -913,7 +913,27 @@ sub run_command {
         unless ($self->{verbose}) {
             $cmd .= " >> " . Menlo::Util::shell_quote($self->{log}) . " 2>&1";
         }
-        !system $cmd;
+        if ($] >= 5.008) {
+            return !system $cmd;
+        }
+
+        # system of perl < 5.008 doesn't handle the arguments of cmd.exe correctly.
+        # we call cmd.exe directly.
+        my $shell = $ENV{PERL5SHELL} || 'cmd.exe /x/d/c';
+
+        # tokenize
+        my @cmd = ($shell =~ m/(?:\\.|[^ ])+/g);
+        s/\\(.)/$1/ for @cmd;
+
+        # based on create_command_line of win32.c
+        # https://github.com/Perl/perl5/blob/c5f9609a1a8a7a902c023d06c8b2a4c42afce078/win32/win32.c#L3795-L3948
+        if ($cmd =~ /^".*"$/ && $cmd =~ /\s/) {
+            push @cmd, "\"$cmd\"";
+        } else {
+            push @cmd;
+        }
+
+        !system @cmd;
     } else {
         my $pid = fork;
         if ($pid) {
